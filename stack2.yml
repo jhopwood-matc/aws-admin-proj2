@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy EC2 instances and ALB for Project 1 - Outline of Resources/Parameters
+
+Parameters:
+# Need to ask user for name of network stack
+
+Resources:
+
+# Optional BastionHostInstance would go here
+
+WebServerInstance1:
+
+# When you create these resources you'll need to reference values that were exported from stack #1
+# One example would be the Private Subnet ID for placing WebServerInstance1 on
+# This should look SOMETHING like this in my example from class:
+SubnetId:
+  Fn::ImportValue:
+    Fn::Sub: "${NetworkStackName}-PvtSubnet1"
+
+WebServerInstance2:
+
+ALBListener:
+
+ALBTargetGroup:
+
+ApplicationLoadBalancer:
+
+Outputs:
+# This is an example of the complete YAML code for outputting the VPC information and also exporting the VPC ID for use
+# by another template
+  ApplicationLoadBalancer:
+# Need the DNS/URL of the ApplicationLoadBalancer

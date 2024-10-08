@@ -1,0 +1,185 @@
+AWSTemplateFormatVersion: '2010-09-09
+
+Description: Deploy Network and Security Groups for Project 1
+
+Resources:
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: production-vpc
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: production-igw
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternedGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: us-east-1a
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: production-pubsub1
+      VpcId: !Ref VPC
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: us-east-1b
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: production-pubsub2
+      VpcId: !Ref VPC
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: us-east-1a
+      CidrBlock: 10.0.3.0/24
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: production-privsub1
+      VpcId: !Ref VPC
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: us-east-1a
+      CidrBlock: 10.0.3.0/24
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: production-privsub1
+      VpcId: !Ref VPC
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: Name
+          Value: production-pubrt
+      VpcId: !Ref VPC
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: allow http to application load balancer
+      GroupName: production-alb-sg
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  WebInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: allow alb traffic to web instance
+      GroupName: production-web-sg
+      VpcId: !Ref VPC
+
+  WebInstanceSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 80
+      GroupId: !Ref WebInstanceSecurityGroup
+      IpProtocol: tcp
+      SourceSecurityGroupId: !Ref ALBSecurityGroup
+      ToPort: 80
+
+  # Optional BastionSercurityGroup if you build a Bastion Host
+
+Outputs:
+
+  VPC:
+    Description: VPC
+    Value:
+      Ref: VPC
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-VPCId"
+
+  PrivateSubnet1:
+    Description: PrivateSubnet1
+    Value:
+      Ref: PrivateSubnet1
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-PrivateSubnet1Id"
+
+  PrivateSubnet2:
+    Description: PrivateSubnet2
+    Value:
+      Ref: PrivateSubnet2
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-PrivateSubnet2Id"
+
+  PublicSubnet1:
+    Description: PublicSubnet1
+    Value:
+      Ref: PublicSubnet1
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-PublicSubnet1Id"
+
+  PublicSubnet2:
+    Description: PublicSubnet2
+    Value:
+      Ref: PublicSubnet2
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-PublicSubnet2Id"
+
+  WebInstanceSecurityGroup:
+    Description: WebInstanceSecurityGroup
+    Value:
+      Ref: WebInstanceSecurityGroup
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-WebInstanceSecurityGroupId"
+
+  ALBSecurityGroup:
+    Description: ALBSecurityGroup
+    Value:
+    Ref: ALBSecurityGroup
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-ALBSecurityGroupId"
