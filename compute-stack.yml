@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploy EC2 instances and ALB for Project 1 - Outline of Resources/Parameters
+
+Parameters:
+  NetworkStackName:
+    Type: String
+    Default: Enter Network Stack Name
+
+Resources:
+
+  WebServerInstance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0ba3677288224cb8c
+      InstanceType: t2.micro
+      SubnetId:
+        Fn::ImportValue:
+          Fn::Sub: "${NetworkStackName}-PrivateSubnet1Id"
+      SecurityGroupIds:
+        - Fn::ImportValue:
+            Fn::Sub: "${NetworkStackName}-WebInstanceSecurityGroupId"
+      Tags:
+        - Key: Name
+          Value: production-web-instance-1
+
+  WebServerInstance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0ba3677288224cb8c
+      InstanceType: t2.micro
+      SubnetId:
+        Fn::ImportValue:
+          Fn::Sub: "${NetworkStackName}-PrivateSubnet2Id"
+      SecurityGroupIds:
+        - Fn::ImportValue:
+            Fn::Sub: "${NetworkStackName}-WebInstanceSecurityGroupId"
+      Tags:
+        - Key: Name
+          Value: production-web-instance-2
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions: 
+        - TargetGroupArn: !Ref ALBTargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 80
+      Protocol: HTTP
+      Tags: 
+        - Key: Name
+          Value: production-alb-tg-web
+      Targets: 
+        - Id: !Ref WebServerInstance1
+          Port: 80
+        - Id: !Ref WebServerInstance2
+          Port: 80
+      TargetType: instance
+      VpcId: 
+        Fn::ImportValue:
+          Fn::Sub: "${NetworkStackName}-VPCId"
+
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      IpAddressType: ipv4
+      SecurityGroups: 
+        - Fn::ImportValue:
+            Fn::Sub: "${NetworkStackName}-ALBSecurityGroupId"
+      Subnets: 
+        - Fn::ImportValue:
+            Fn::Sub: "${NetworkStackName}-PublicSubnet1Id"
+        - Fn::ImportValue:
+            Fn::Sub: "${NetworkStackName}-PublicSubnet2Id"
+      Tags: 
+        - Key: Name
+          Value: production-alb
+
+Outputs:
+
+  ApplicationLoadBalancer:
+    Description: The DNS/URL of the ApplicationLoadBalancer
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+    Export:
+      Name: WebsiteURL

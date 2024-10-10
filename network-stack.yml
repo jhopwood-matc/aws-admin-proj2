@@ -1,9 +1,16 @@
-AWSTemplateFormatVersion: '2010-09-09
+AWSTemplateFormatVersion: 2010-09-09
 
 Description: Deploy Network and Security Groups for Project 1
 
+# This template deploys the network portion of the production infrastructure to
+# host a simple we applicaiton.
+
 Resources:
 
+  # We are goig to deploy 4 subnets in our network --2 public and 2 private.
+  # The private ones will contain the EC2 Web server instances.
+  # The public ones will be used to associate with the application load balancer
+  # which we are also deploying in this network.
   VPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -22,9 +29,10 @@ Resources:
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
-      InternedGatewayId: !Ref InternetGateway
+      InternetGatewayId: !Ref InternetGateway
       VpcId: !Ref VPC
-
+  # These two public subnets are going to be empty, but optionally, we could add
+  # a bastion host to troubleshoot the web servers if issues are encountered.
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -47,6 +55,7 @@ Resources:
           Value: production-pubsub2
       VpcId: !Ref VPC
 
+  # Each one of these private subnets are going to contain a EC2 web server
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -61,12 +70,12 @@ Resources:
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: us-east-1a
-      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: us-east-1b
+      CidrBlock: 10.0.4.0/24
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: production-privsub1
+          Value: production-privsub2
       VpcId: !Ref VPC
 
   PublicRouteTable:
@@ -96,6 +105,7 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet2
 
+  # We are going to use HTTP and not HTTPS
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -103,10 +113,10 @@ Resources:
       GroupName: production-alb-sg
       VpcId: !Ref VPC
       SecurityGroupIngress:
-        - IpProtocol: tcp
+        - IpProtocol: TCP
+          CidrIp: 0.0.0.0/0
           FromPort: 80
           ToPort: 80
-          CidrIp: 0.0.0.0/0
 
   WebInstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -118,13 +128,11 @@ Resources:
   WebInstanceSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      FromPort: 80
       GroupId: !Ref WebInstanceSecurityGroup
-      IpProtocol: tcp
-      SourceSecurityGroupId: !Ref ALBSecurityGroup
+      IpProtocol: TCP
+      FromPort: 80
       ToPort: 80
-
-  # Optional BastionSercurityGroup if you build a Bastion Host
+      SourceSecurityGroupId: !Ref ALBSecurityGroup
 
 Outputs:
 
@@ -179,7 +187,7 @@ Outputs:
   ALBSecurityGroup:
     Description: ALBSecurityGroup
     Value:
-    Ref: ALBSecurityGroup
+      Ref: ALBSecurityGroup
     Export:
       Name:
         Fn::Sub: "${AWS::StackName}-ALBSecurityGroupId"
