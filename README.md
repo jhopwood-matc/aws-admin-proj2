@@ -1,13 +1,14 @@
-# Project 1: AWS Administration Midterm
+# Project 2: AWS Administration
 
 ## Overview
 
-This project was completed for the AWS Administration class in Fall 2024. It consists of CloudFormation templates designed to automate the deployment of a simple web application. The deployment is divided into two stacks: one for the network infrastructure and another for the compute resources.
+This project was completed for the AWS Administration class in Fall 2024. It is a continuation of ![Project 1](https://github.com/jhopwood-matc/aws-admin-proj1). This project focuses on deploying the previously created application using "nested templates" and developing the skillset around using them. 
 
 ## Project Structure
 
 - **Network Stack**: Deploys the necessary network infrastructure.
 - **Compute Stack**: Manages the deployment of compute resources for the web application.
+- TODO
 
 ## Architecture Diagram
 
@@ -19,7 +20,4 @@ To understand the overall architecture of the deployment, please refer to the fo
 
 To deploy the application, follow these steps:
 
-1. Ensure you have AWS CLI configured with the necessary permissions.
-2. Deploy the network stack:
-   ```bash
-   aws cloudformation deploy --template-file network-stack.yaml --stack-name my-network-stack
+TODO
