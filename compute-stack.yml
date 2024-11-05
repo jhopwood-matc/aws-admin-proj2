@@ -2,9 +2,27 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Deploy EC2 instances and ALB for Project 1 - Outline of Resources/Parameters
 
 Parameters:
-  NetworkStackName:
+
+  PrivateSubnet1Id:
     Type: String
-    Default: Enter Network Stack Name
+
+  WebInstanceSecurityGroupId:
+    Type: String
+
+  PrivateSubnet2Id:
+    Type: String
+
+  VPCId:
+    Type: String
+
+  ALBSecurityGroupId:
+    Type: String
+
+  PublicSubnet1Id:
+    Type: String
+
+  PublicSubnet2Id:
+    Type: String
 
 Resources:
 
@@ -13,12 +31,9 @@ Resources:
     Properties:
       ImageId: ami-0ba3677288224cb8c
       InstanceType: t2.micro
-      SubnetId:
-        Fn::ImportValue:
-          Fn::Sub: "${NetworkStackName}-PrivateSubnet1Id"
+      SubnetId: !Ref PrivateSubnet1Id
       SecurityGroupIds:
-        - Fn::ImportValue:
-            Fn::Sub: "${NetworkStackName}-WebInstanceSecurityGroupId"
+        - !Ref WebInstanceSecurityGroupId
       Tags:
         - Key: Name
           Value: production-web-instance-1
@@ -28,12 +43,9 @@ Resources:
     Properties:
       ImageId: ami-0ba3677288224cb8c
       InstanceType: t2.micro
-      SubnetId:
-        Fn::ImportValue:
-          Fn::Sub: "${NetworkStackName}-PrivateSubnet2Id"
+      SubnetId: !Ref PrivateSubnet2Id
       SecurityGroupIds:
-        - Fn::ImportValue:
-            Fn::Sub: "${NetworkStackName}-WebInstanceSecurityGroupId"
+        - !Ref WebInstanceSecurityGroupId
       Tags:
         - Key: Name
           Value: production-web-instance-2
@@ -62,22 +74,17 @@ Resources:
         - Id: !Ref WebServerInstance2
           Port: 80
       TargetType: instance
-      VpcId: 
-        Fn::ImportValue:
-          Fn::Sub: "${NetworkStackName}-VPCId"
+      VpcId: !Ref VPCId
 
   ApplicationLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       IpAddressType: ipv4
-      SecurityGroups: 
-        - Fn::ImportValue:
-            Fn::Sub: "${NetworkStackName}-ALBSecurityGroupId"
+      SecurityGroups:
+        - !Ref ALBSecurityGroupId
       Subnets: 
-        - Fn::ImportValue:
-            Fn::Sub: "${NetworkStackName}-PublicSubnet1Id"
-        - Fn::ImportValue:
-            Fn::Sub: "${NetworkStackName}-PublicSubnet2Id"
+        - !Ref PublicSubnet1Id
+        - !Ref PublicSubnet2Id
       Tags: 
         - Key: Name
           Value: production-alb

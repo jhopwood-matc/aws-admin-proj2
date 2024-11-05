@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploy Network and Compute stack for project application.
+
+Resources:
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://cfts-josephhopwood.s3.us-east-1.amazonaws.com/network-stack.yml
+  
+  ComputeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: NetworkStack
+    Properties:
+      TemplateURL: https://cfts-josephhopwood.s3.us-east-1.amazonaws.com/compute-stack.yml
+      Parameters:
+        PrivateSubnet1Id: 
+          Fn::GetAtt: [NetworkStack, Outputs.PrivateSubnet1]
+        WebInstanceSecurityGroupId:
+          Fn::GetAtt: [NetworkStack, Outputs.WebInstanceSecurityGroup]
+        PrivateSubnet2Id:
+          Fn::GetAtt: [NetworkStack, Outputs.PrivateSubnet2]
+        VPCId:
+          Fn::GetAtt: [NetworkStack, Outputs.VPC]
+        ALBSecurityGroupId:
+          Fn::GetAtt: [NetworkStack, Outputs.ALBSecurityGroup]
+        PublicSubnet1Id:
+          Fn::GetAtt: [NetworkStack, Outputs.PublicSubnet1]
+        PublicSubnet2Id:
+          Fn::GetAtt: [NetworkStack, Outputs.PublicSubnet2]
+
